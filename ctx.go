@@ -15,6 +15,7 @@
 package openssl
 
 // #include "shim.h"
+// #include "openssl/ssl.h"
 import "C"
 
 import (
@@ -75,6 +76,7 @@ const (
 	TLSv1   SSLVersion = 0x03
 	TLSv1_1 SSLVersion = 0x04
 	TLSv1_2 SSLVersion = 0x05
+	TLSv1_3 SSLVersion = 0x07
 
 	// Make sure to disable SSLv2 and SSLv3 if you use this. SSLv3 is vulnerable
 	// to the "POODLE" attack, and SSLv2 is what, just don't even.
@@ -85,31 +87,38 @@ const (
 // SSL version. See http://www.openssl.org/docs/ssl/SSL_CTX_new.html for more.
 func NewCtxWithVersion(version SSLVersion) (*Ctx, error) {
 	var method *C.SSL_METHOD
-	switch version {
-	case SSLv3:
-		method = C.X_SSLv3_method()
-	case TLSv1:
-		method = C.X_TLSv1_method()
-	case TLSv1_1:
-		method = C.X_TLSv1_1_method()
-	case TLSv1_2:
-		method = C.X_TLSv1_2_method()
-	case AnyVersion:
-		method = C.X_SSLv23_method()
+	method = C.X_TLS_method()
+	ctx, err := newCtx(method)
+	if err != nil {
+		return nil, err
 	}
-	if method == nil {
-		return nil, errors.New("unknown ssl/tls version")
+
+	err = ctx.SetMinProtoVersion(version)
+	if err != nil {
+		return nil, err
 	}
-	return newCtx(method)
+
+	err = ctx.SetMaxProtoVersion(version)
+	if err != nil {
+		return nil, err
+	}
+	return ctx, nil
 }
 
 // NewCtx creates a context that supports any TLS version 1.0 and newer.
 func NewCtx() (*Ctx, error) {
-	c, err := NewCtxWithVersion(AnyVersion)
-	if err == nil {
-		c.SetOptions(NoSSLv2 | NoSSLv3)
+	var method *C.SSL_METHOD
+	method = C.X_TLS_method()
+	ctx, err := newCtx(method)
+	if err != nil {
+		return nil, err
 	}
-	return c, err
+
+	err = ctx.SetMinProtoVersion(TLSv1)
+	if err != nil {
+		return nil, err
+	}
+	return ctx, err
 }
 
 // NewCtxFromFiles calls NewCtx, loads the provided files, and configures the
@@ -519,6 +528,62 @@ func (c *Ctx) SetCipherList(list string) error {
 	if int(C.SSL_CTX_set_cipher_list(c.ctx, clist)) == 0 {
 		return errorFromErrorQueue()
 	}
+	return nil
+}
+
+// SetMinProtoVersion sets the minimum supported TLS protocol.
+// See https://www.openssl.org/docs/man1.1.1/man3/SSL_CTX_set_min_proto_version.html
+func (c *Ctx) SetMinProtoVersion(version SSLVersion) error {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
+	var minVersion C.int
+	switch version {
+	case SSLv3:
+		minVersion = C.X_SSL3_VERSION()
+	case TLSv1:
+		minVersion = C.X_TLS1_VERSION()
+	case TLSv1_1:
+		minVersion = C.X_TLS1_1_VERSION()
+	case TLSv1_2:
+		minVersion = C.X_TLS1_2_VERSION()
+	case TLSv1_3:
+		minVersion = C.X_TLS1_3_VERSION()
+	case AnyVersion:
+		return fmt.Errorf("AnyVersion is an invalid version to set as minimum protocol")
+	}
+	if int(C.X_SSL_CTX_set_min_proto_version(c.ctx, minVersion)) == 0 {
+		return fmt.Errorf("Set minimum protocol version failed")
+	}
+
+	return nil
+}
+
+// SetMaxProtoVersion sets the maximum supported TLS protocol.
+// See https://www.openssl.org/docs/man1.1.1/man3/SSL_CTX_set_max_proto_version.html
+func (c *Ctx) SetMaxProtoVersion(version SSLVersion) error {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
+	var maxVersion C.int
+	switch version {
+	case SSLv3:
+		maxVersion = C.X_SSL3_VERSION()
+	case TLSv1:
+		maxVersion = C.X_TLS1_VERSION()
+	case TLSv1_1:
+		maxVersion = C.X_TLS1_1_VERSION()
+	case TLSv1_2:
+		maxVersion = C.X_TLS1_2_VERSION()
+	case TLSv1_3:
+		maxVersion = C.X_TLS1_3_VERSION()
+	case AnyVersion:
+		return fmt.Errorf("AnyVersion is an invalid version to set as minimum protocol")
+	}
+	if int(C.X_SSL_CTX_set_max_proto_version(c.ctx, maxVersion)) == 0 {
+		return fmt.Errorf("Set maximum protocol version failed")
+	}
+
 	return nil
 }
 

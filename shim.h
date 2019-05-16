@@ -58,6 +58,13 @@ extern const SSL_METHOD *X_SSLv3_method();
 extern const SSL_METHOD *X_TLSv1_method();
 extern const SSL_METHOD *X_TLSv1_1_method();
 extern const SSL_METHOD *X_TLSv1_2_method();
+extern const SSL_METHOD *X_TLS_method();
+
+extern int X_SSL3_VERSION();
+extern int X_TLS1_VERSION();
+extern int X_TLS1_1_VERSION();
+extern int X_TLS1_2_VERSION();
+extern int X_TLS1_3_VERSION();
 
 #if defined SSL_CTRL_SET_TLSEXT_HOSTNAME
 extern int sni_cb(SSL *ssl_conn, int *ad, void *arg);
@@ -71,6 +78,8 @@ extern long X_SSL_CTX_clear_options(SSL_CTX* ctx, long options);
 extern long X_SSL_CTX_get_options(SSL_CTX* ctx);
 extern long X_SSL_CTX_set_mode(SSL_CTX* ctx, long modes);
 extern long X_SSL_CTX_get_mode(SSL_CTX* ctx);
+extern long X_SSL_CTX_set_min_proto_version(SSL_CTX* ctx, int version);
+extern long X_SSL_CTX_set_max_proto_version(SSL_CTX* ctx, int version);
 extern long X_SSL_CTX_set_session_cache_mode(SSL_CTX* ctx, long modes);
 extern long X_SSL_CTX_sess_set_cache_size(SSL_CTX* ctx, long t);
 extern long X_SSL_CTX_sess_get_cache_size(SSL_CTX* ctx);

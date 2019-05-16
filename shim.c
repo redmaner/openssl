@@ -43,7 +43,12 @@ static int go_write_bio_puts(BIO *b, const char *str) {
  * v1.1.1 and later implementation
  ************************************************
  */
+
 #if OPENSSL_VERSION_NUMBER >= 0x1010100fL
+
+int X_TLS1_3_VERSION() {
+ return TLS1_3_VERSION;
+}
 
 const int X_ED25519_SUPPORT = 1;
 int X_EVP_PKEY_ED25519 = EVP_PKEY_ED25519;
@@ -58,7 +63,6 @@ int X_EVP_DigestSign(EVP_MD_CTX *ctx, unsigned char *sigret,
 	return EVP_DigestSign(ctx, sigret, siglen, tbs, tbslen);
 }
 
-
 int X_EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
 		const EVP_MD *type, ENGINE *e, EVP_PKEY *pkey){
 	return EVP_DigestVerifyInit(ctx, pctx, type, e, pkey);
@@ -70,6 +74,10 @@ int X_EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned char *sigret,
 }
 
 #else
+
+int X_TLS1_3_VERSION() {
+ return TLS1_2_VERSION;
+}
 
 const int X_ED25519_SUPPORT = 0;
 int X_EVP_PKEY_ED25519 = EVP_PKEY_NONE;
@@ -103,6 +111,22 @@ int X_EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned char *sigret,
  ************************************************
  */
 #if OPENSSL_VERSION_NUMBER >= 0x1010000fL
+
+int X_SSL3_VERSION() {
+	return SSL3_VERSION;
+}
+
+int X_TLS1_VERSION() {
+	return TLS1_VERSION;
+}
+
+int X_TLS1_1_VERSION() {
+	return TLS1_1_VERSION;
+}
+
+int X_TLS1_2_VERSION() {
+	return TLS1_2_VERSION;
+}
 
 void X_BIO_set_data(BIO* bio, void* data) {
 	BIO_set_data(bio, data);
@@ -471,6 +495,14 @@ const SSL_METHOD *X_TLSv1_2_method() {
 #endif
 }
 
+const SSL_METHOD *X_TLS_method() {
+#if OPENSSL_VERSION_NUMBER >= 0x1010100fL
+	return TLS_method();
+#else
+	return SSLv23_method();
+#endif
+}
+
 int X_SSL_CTX_new_index() {
 	return SSL_CTX_get_ex_new_index(0, NULL, NULL, NULL, NULL);
 }
@@ -497,6 +529,14 @@ long X_SSL_CTX_get_mode(SSL_CTX* ctx) {
 
 long X_SSL_CTX_set_session_cache_mode(SSL_CTX* ctx, long modes) {
 	return SSL_CTX_set_session_cache_mode(ctx, modes);
+}
+
+long X_SSL_CTX_set_min_proto_version(SSL_CTX* ctx, int version) {
+	return SSL_CTX_set_min_proto_version(ctx, version);
+}
+
+long X_SSL_CTX_set_max_proto_version(SSL_CTX* ctx, int version) {
+	return SSL_CTX_set_max_proto_version(ctx, version);
 }
 
 long X_SSL_CTX_sess_set_cache_size(SSL_CTX* ctx, long t) {
