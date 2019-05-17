@@ -78,6 +78,7 @@ extern long X_SSL_CTX_clear_options(SSL_CTX* ctx, long options);
 extern long X_SSL_CTX_get_options(SSL_CTX* ctx);
 extern long X_SSL_CTX_set_mode(SSL_CTX* ctx, long modes);
 extern long X_SSL_CTX_get_mode(SSL_CTX* ctx);
+extern long X_SSL_CTX_set_ciphersuites(SSL_CTX* ctx, const char *str);
 extern long X_SSL_CTX_set_min_proto_version(SSL_CTX* ctx, int version);
 extern long X_SSL_CTX_set_max_proto_version(SSL_CTX* ctx, int version);
 extern long X_SSL_CTX_set_session_cache_mode(SSL_CTX* ctx, long modes);

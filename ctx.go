@@ -531,6 +531,20 @@ func (c *Ctx) SetCipherList(list string) error {
 	return nil
 }
 
+// SetCipherSuites is used to configure the available TLSv1.3 cipher suites.
+// SetCipherList cannot be used for TLSv1.3. See https://www.openssl.org/docs/man1.1.1/man3/SSL_CTX_set_ciphersuites.html
+// for futher reference.
+func (c *Ctx) SetCipherSuites(list string) error {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+	clist := C.CString(list)
+	defer C.free(unsafe.Pointer(clist))
+	if int(C.X_SSL_CTX_set_ciphersuites(c.ctx, clist)) == 0 {
+		return errorFromErrorQueue()
+	}
+	return nil
+}
+
 // SetMinProtoVersion sets the minimum supported TLS protocol.
 // See https://www.openssl.org/docs/man1.1.1/man3/SSL_CTX_set_min_proto_version.html
 func (c *Ctx) SetMinProtoVersion(version SSLVersion) error {

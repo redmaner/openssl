@@ -73,6 +73,10 @@ int X_EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned char *sigret,
 	return EVP_DigestVerify(ctx, sigret, siglen, tbs, tbslen);
 }
 
+long X_SSL_CTX_set_ciphersuites(SSL_CTX* ctx, const char *str) {
+	return SSL_CTX_set_ciphersuites(ctx, str);
+}
+
 #else
 
 int X_TLS1_3_VERSION() {
@@ -101,6 +105,10 @@ int X_EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
 int X_EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned char *sigret,
 		size_t siglen, const unsigned char *tbs, size_t tbslen){
 	return 0;
+}
+
+long X_SSL_CTX_set_ciphersuites(SSL_CTX* ctx, const char *str) {
+	return SSL_CTX_set_cipher_list(ctx, str);
 }
 
 #endif
