@@ -15,7 +15,6 @@
 package openssl
 
 // #include "shim.h"
-// #include "openssl/ssl.h"
 import "C"
 
 import (
@@ -72,15 +71,15 @@ func newCtx(method *C.SSL_METHOD) (*Ctx, error) {
 type SSLVersion int
 
 const (
-	SSLv3   SSLVersion = 0x02 // Vulnerable to "POODLE" attack.
-	TLSv1   SSLVersion = 0x03
-	TLSv1_1 SSLVersion = 0x04
-	TLSv1_2 SSLVersion = 0x05
-	TLSv1_3 SSLVersion = 0x07
+	SSLv3   SSLVersion = 0x0300 // Vulnerable to "POODLE" attack.
+	TLSv1   SSLVersion = 0x0301
+	TLSv1_1 SSLVersion = 0x0302
+	TLSv1_2 SSLVersion = 0x0303
+	TLSv1_3 SSLVersion = 0x0304
 
 	// Make sure to disable SSLv2 and SSLv3 if you use this. SSLv3 is vulnerable
 	// to the "POODLE" attack, and SSLv2 is what, just don't even.
-	AnyVersion SSLVersion = 0x06
+	AnyVersion SSLVersion = 0x0500
 )
 
 // NewCtxWithVersion creates an SSL context that is specific to the provided
@@ -551,23 +550,12 @@ func (c *Ctx) SetMinProtoVersion(version SSLVersion) error {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
-	var minVersion C.int
 	switch version {
-	case SSLv3:
-		minVersion = C.X_SSL3_VERSION()
-	case TLSv1:
-		minVersion = C.X_TLS1_VERSION()
-	case TLSv1_1:
-		minVersion = C.X_TLS1_1_VERSION()
-	case TLSv1_2:
-		minVersion = C.X_TLS1_2_VERSION()
-	case TLSv1_3:
-		minVersion = C.X_TLS1_3_VERSION()
 	case AnyVersion:
 		return fmt.Errorf("AnyVersion is an invalid version to set as minimum protocol")
 	}
-	if int(C.X_SSL_CTX_set_min_proto_version(c.ctx, minVersion)) == 0 {
-		return fmt.Errorf("Set minimum protocol version failed")
+	if int(C.X_SSL_CTX_set_min_proto_version(c.ctx, C.int(version))) == 0 {
+		return errorFromErrorQueue()
 	}
 
 	return nil
@@ -579,23 +567,12 @@ func (c *Ctx) SetMaxProtoVersion(version SSLVersion) error {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 
-	var maxVersion C.int
 	switch version {
-	case SSLv3:
-		maxVersion = C.X_SSL3_VERSION()
-	case TLSv1:
-		maxVersion = C.X_TLS1_VERSION()
-	case TLSv1_1:
-		maxVersion = C.X_TLS1_1_VERSION()
-	case TLSv1_2:
-		maxVersion = C.X_TLS1_2_VERSION()
-	case TLSv1_3:
-		maxVersion = C.X_TLS1_3_VERSION()
 	case AnyVersion:
 		return fmt.Errorf("AnyVersion is an invalid version to set as minimum protocol")
 	}
-	if int(C.X_SSL_CTX_set_max_proto_version(c.ctx, maxVersion)) == 0 {
-		return fmt.Errorf("Set maximum protocol version failed")
+	if int(C.X_SSL_CTX_set_max_proto_version(c.ctx, C.int(version))) == 0 {
+		return errorFromErrorQueue()
 	}
 
 	return nil

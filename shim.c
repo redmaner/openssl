@@ -46,10 +46,6 @@ static int go_write_bio_puts(BIO *b, const char *str) {
 
 #if OPENSSL_VERSION_NUMBER >= 0x1010100fL
 
-int X_TLS1_3_VERSION() {
- return TLS1_3_VERSION;
-}
-
 const int X_ED25519_SUPPORT = 1;
 int X_EVP_PKEY_ED25519 = EVP_PKEY_ED25519;
 
@@ -78,10 +74,6 @@ long X_SSL_CTX_set_ciphersuites(SSL_CTX* ctx, const char *str) {
 }
 
 #else
-
-int X_TLS1_3_VERSION() {
- return TLS1_2_VERSION;
-}
 
 const int X_ED25519_SUPPORT = 0;
 int X_EVP_PKEY_ED25519 = EVP_PKEY_NONE;
@@ -119,22 +111,6 @@ long X_SSL_CTX_set_ciphersuites(SSL_CTX* ctx, const char *str) {
  ************************************************
  */
 #if OPENSSL_VERSION_NUMBER >= 0x1010000fL
-
-int X_SSL3_VERSION() {
-	return SSL3_VERSION;
-}
-
-int X_TLS1_VERSION() {
-	return TLS1_VERSION;
-}
-
-int X_TLS1_1_VERSION() {
-	return TLS1_1_VERSION;
-}
-
-int X_TLS1_2_VERSION() {
-	return TLS1_2_VERSION;
-}
 
 void X_BIO_set_data(BIO* bio, void* data) {
 	BIO_set_data(bio, data);
@@ -539,11 +515,11 @@ long X_SSL_CTX_set_session_cache_mode(SSL_CTX* ctx, long modes) {
 	return SSL_CTX_set_session_cache_mode(ctx, modes);
 }
 
-long X_SSL_CTX_set_min_proto_version(SSL_CTX* ctx, int version) {
+int X_SSL_CTX_set_min_proto_version(SSL_CTX* ctx, int version) {
 	return SSL_CTX_set_min_proto_version(ctx, version);
 }
 
-long X_SSL_CTX_set_max_proto_version(SSL_CTX* ctx, int version) {
+int X_SSL_CTX_set_max_proto_version(SSL_CTX* ctx, int version) {
 	return SSL_CTX_set_max_proto_version(ctx, version);
 }
 
